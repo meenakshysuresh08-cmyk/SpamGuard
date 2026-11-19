@@ -1,0 +1,20 @@
+Subject: URGENT: Account Verification Required - Action Needed Within 24 Hours!
+
+Dear Valued Customer,
+
+URGENT: Your account has been temporarily suspended due to suspicious activity!
+
+We detected unusual login attempts from a new device at IP address 192.168.1.100.
+IMMEDIATELY verify your identity to restore access!
+
+CLICK HERE: https://account-verify-secure.xyz/login
+
+Your OTP is: 847291
+
+DO NOT share this code with anyone!
+
+Failure to verify within 24 hours will result in permanent account deletion.
+
+Sincerely,
+Security Team
+SecureBank Support

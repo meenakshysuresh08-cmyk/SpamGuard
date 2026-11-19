@@ -1,0 +1,16 @@
+Subject: Immediate Action: Password Reset Required for Security
+
+Your password is about to expire. Reset now to avoid account lockout!
+
+URGENT: Your account password will expire in 2 hours!
+To prevent unauthorized access, please reset immediately.
+
+Click here: https://password-reset-secure.com/reset
+
+You will need to enter your current password and create a new one.
+For security, we'll also verify your SSN and credit card on file.
+
+If you don't reset, your account will be permanently suspended.
+
+Security Team
+SecureAccount Services
