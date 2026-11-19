@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header-block">
+    <div class="page-header-text">
+        <h1 class="page-main-title">Security Intelligence Dashboard</h1>
+        <p class="page-subtitle">Real-time spam analysis telemetry driven by Formal Language Theory and Deterministic Finite Automata.</p>
+    </div>
+    <div class="page-header-actions">
+        <a href="{{ url_for('scanner') }}" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+            Launch Email Scanner
+        </a>
+        <a href="{{ url_for('dfa_simulator') }}" class="btn-outline">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+            Test DFA Automaton
+        </a>
+    </div>
+</div>
+
+{% set stats = stats or {'total': 0, 'legitimate': 0, 'suspicious': 0, 'spam': 0, 'score_distribution': {'legitimate': 0, 'suspicious': 0, 'spam': 0}} %}
+{% set recent_scans = recent_scans or [] %}
+{% set total_count = stats.total if stats.total > 0 else 0 %}
+{% set leg_pct = ((stats.legitimate / total_count * 100)|round(1)) if total_count > 0 else 0 %}
+{% set sus_pct = ((stats.suspicious / total_count * 100)|round(1)) if total_count > 0 else 0 %}
+{% set spam_pct = ((stats.spam / total_count * 100)|round(1)) if total_count > 0 else 0 %}
+
+<!-- Top Metric Cards -->
+<div class="metrics-grid">
+    <!-- Total Scanned -->
+    <div class="metric-card card-total">
+        <div class="metric-top">
+            <span class="metric-label">Total Emails Analyzed</span>
+            <div class="metric-icon-box icon-blue">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="20" height="16" x="2" y="4" rx="2"/>
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+            </div>
+        </div>
+        <div class="metric-val-row">
+            <span class="metric-number">{{ total_count }}</span>
+            <span class="metric-badge">SQLite Logged</span>
+        </div>
+        <div class="metric-footer-text">
+            <span>Historical analysis events stored</span>
+        </div>
+    </div>
+
+    <!-- Legitimate -->
+    <div class="metric-card card-legitimate">
+        <div class="metric-top">
+            <span class="metric-label">Legitimate Clean</span>
+            <div class="metric-icon-box icon-emerald">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="m9 12 2 2 4-4"/>
+                </svg>
+            </div>
+        </div>
+        <div class="metric-val-row">
+            <span class="metric-number">{{ stats.legitimate }}</span>
+            <span class="metric-badge badge-green">{{ leg_pct }}%</span>
+        </div>
+        <div class="metric-progress-track">
+            <div class="metric-progress-bar bar-green" style="width: {{ leg_pct }}%;"></div>
+        </div>
+    </div>
+
+    <!-- Suspicious -->
+    <div class="metric-card card-suspicious">
+        <div class="metric-top">
+            <span class="metric-label">Suspicious Risk</span>
+            <div class="metric-icon-box icon-amber">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+        </div>
+        <div class="metric-val-row">
+            <span class="metric-number">{{ stats.suspicious }}</span>
+            <span class="metric-badge badge-amber">{{ sus_pct }}%</span>
+        </div>
+        <div class="metric-progress-track">
+            <div class="metric-progress-bar bar-amber" style="width: {{ sus_pct }}%;"></div>
+        </div>
+    </div>
+
+    <!-- Spam -->
+    <div class="metric-card card-spam">
+        <div class="metric-top">
+            <span class="metric-label">Spam Confirmed</span>
+            <div class="metric-icon-box icon-rose">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+            </div>
+        </div>
+        <div class="metric-val-row">
+            <span class="metric-number">{{ stats.spam }}</span>
+            <span class="metric-badge badge-rose">{{ spam_pct }}%</span>
+        </div>
+        <div class="metric-progress-track">
+            <div class="metric-progress-bar bar-rose" style="width: {{ spam_pct }}%;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Middle Section: Visual Charts & TOC Specification -->
+<div class="dashboard-panels-grid">
+    <!-- Chart Panel -->
+    <div class="ui-panel">
+        <div class="panel-header">
+            <div>
+                <h3 class="panel-title">Classification Distribution</h3>
+                <p class="panel-desc">Proportional breakdown of classified incoming content</p>
+            </div>
+            <div class="panel-tag">Live Telemetry</div>
+        </div>
+        
+        <div class="panel-body">
+            {% if total_count > 0 %}
+            <div class="chart-wrapper">
+                <div class="chart-stats-summary">
+                    <div class="legend-pill">
+                        <span class="legend-dot dot-green"></span>
+                        <span class="legend-name">Legitimate:</span>
+                        <span class="legend-count">{{ stats.legitimate }} ({{ leg_pct }}%)</span>
+                    </div>
+                    <div class="legend-pill">
+                        <span class="legend-dot dot-amber"></span>
+                        <span class="legend-name">Suspicious:</span>
+                        <span class="legend-count">{{ stats.suspicious }} ({{ sus_pct }}%)</span>
+                    </div>
+                    <div class="legend-pill">
+                        <span class="legend-dot dot-rose"></span>
+                        <span class="legend-name">Spam:</span>
+                        <span class="legend-count">{{ stats.spam }} ({{ spam_pct }}%)</span>
+                    </div>
+                </div>
+
+                <!-- Modern SVG Bar Graphic -->
+                <div class="modern-chart-box">
+                    {% set max_val = [stats.legitimate, stats.suspicious, stats.spam]|max %}
+                    {% set max_h = 160 %}
+                    <svg viewBox="0 0 460 210" class="analytics-svg" preserveAspectRatio="xMidYMid meet">
+                        <!-- Grid Lines -->
+                        <line x1="40" y1="30" x2="440" y2="30" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="4 4" />
+                        <line x1="40" y1="80" x2="440" y2="80" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="4 4" />
+                        <line x1="40" y1="130" x2="440" y2="130" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="4 4" />
+                        <line x1="40" y1="180" x2="440" y2="180" stroke="#e2e8f0" stroke-width="1.5" />
+
+                        <!-- Legitimate Bar -->
+                        {% set leg_h = ((stats.legitimate / max_val * 140)|round) if max_val > 0 else 0 %}
+                        <g class="chart-bar-group">
+                            <rect x="75" y="{{ 180 - leg_h }}" width="70" height="{{ leg_h }}" rx="6" fill="url(#gradLeg)" class="bar-rect" />
+                            <text x="110" y="{{ 180 - leg_h - 10 }}" text-anchor="middle" class="svg-value-label">{{ stats.legitimate }}</text>
+                            <text x="110" y="200" text-anchor="middle" class="svg-axis-label">Legitimate</text>
+                        </g>
+
+                        <!-- Suspicious Bar -->
+                        {% set sus_h = ((stats.suspicious / max_val * 140)|round) if max_val > 0 else 0 %}
+                        <g class="chart-bar-group">
+                            <rect x="195" y="{{ 180 - sus_h }}" width="70" height="{{ sus_h }}" rx="6" fill="url(#gradSus)" class="bar-rect" />
+                            <text x="230" y="{{ 180 - sus_h - 10 }}" text-anchor="middle" class="svg-value-label">{{ stats.suspicious }}</text>
+                            <text x="230" y="200" text-anchor="middle" class="svg-axis-label">Suspicious</text>
+                        </g>
+
+                        <!-- Spam Bar -->
+                        {% set spam_h = ((stats.spam / max_val * 140)|round) if max_val > 0 else 0 %}
+                        <g class="chart-bar-group">
+                            <rect x="315" y="{{ 180 - spam_h }}" width="70" height="{{ spam_h }}" rx="6" fill="url(#gradSpam)" class="bar-rect" />
+                            <text x="350" y="{{ 180 - spam_h - 10 }}" text-anchor="middle" class="svg-value-label">{{ stats.spam }}</text>
+                            <text x="350" y="200" text-anchor="middle" class="svg-axis-label">Spam</text>
+                        </g>
+
+                        <!-- SVG Gradients -->
+                        <defs>
+                            <linearGradient id="gradLeg" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#10b981" />
+                                <stop offset="100%" stop-color="#059669" />
+                            </linearGradient>
+                            <linearGradient id="gradSus" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#f59e0b" />
+                                <stop offset="100%" stop-color="#d97706" />
+                            </linearGradient>
+                            <linearGradient id="gradSpam" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#f43f5e" />
+                                <stop offset="100%" stop-color="#e11d48" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state-panel">
+                <div class="empty-icon-wrap">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M16 16s-1.5-2-4-2-4 2-4 2"/>
+                        <line x1="9" y1="9" x2="9.01" y2="9"/>
+                        <line x1="15" y1="9" x2="15.01" y2="9"/>
+                    </svg>
+                </div>
+                <h4>No Scan Data Logged Yet</h4>
+                <p>Run your first email scan to view classification trends and finite automata traces.</p>
+                <a href="{{ url_for('scanner') }}" class="btn-primary btn-sm">Scan an Email Now</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- TOC Architecture Overview Panel -->
+    <div class="ui-panel">
+        <div class="panel-header">
+            <div>
+                <h3 class="panel-title">TOC Engine Formal Definition</h3>
+                <p class="panel-desc">Deterministic 5-Tuple & Language Classification</p>
+            </div>
+            <span class="badge-code">Type-3 Language</span>
+        </div>
+        <div class="panel-body">
+            <div class="toc-spec-list">
+                <div class="spec-row">
+                    <div class="spec-badge">Q (States)</div>
+                    <div class="spec-content">
+                        <code>{ q0, q1, q2, q3, q4, q_dead }</code>
+                        <span class="spec-desc">6 states modeling progression from benign to credential attack</span>
+                    </div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-badge">Σ (Alphabet)</div>
+                    <div class="spec-content">
+                        <code>{ LURE, URGENT, URL, CREDENTIAL, OTHER }</code>
+                        <span class="spec-desc">Tokens extracted deterministically via compiled regular expressions</span>
+                    </div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-badge">F (Accepting)</div>
+                    <div class="spec-content">
+                        <code class="text-success">{ q3 (Link Target), q4 (Credential Harvest) }</code>
+                        <span class="spec-desc">Reaching either state flags a malicious pattern sequence</span>
+                    </div>
+                </div>
+                <div class="spec-row">
+                    <div class="spec-badge">Complexity</div>
+                    <div class="spec-content">
+                        <code>Time: O(n) | Space: O(1)</code>
+                        <span class="spec-desc">Mathematically bounded execution time without GPU or neural weights</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="toc-mini-callout">
+                <div class="callout-icon">💡</div>
+                <div class="callout-text">
+                    <strong>Zero Model Drift:</strong> Unlike probabilistic ML models that hallucinate or require continuous retraining, this TOC engine operates via formal deterministic language theory.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Scans Table Section -->
+<div class="ui-panel table-panel">
+    <div class="panel-header">
+        <div>
+            <h3 class="panel-title">Recent Scan Activity</h3>
+            <p class="panel-desc">Latest email security verdicts and heuristic risk scoring</p>
+        </div>
+        {% if recent_scans %}
+        <a href="{{ url_for('history') }}" class="view-all-link">
+            View Complete History ({{ total_count }}) →
+        </a>
+        {% endif %}
+    </div>
+    
+    <div class="panel-body no-pad">
+        {% if recent_scans %}
+        <div class="responsive-table-wrapper">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">ID</th>
+                        <th>Subject Header</th>
+                        <th style="width: 140px;">Classification</th>
+                        <th style="width: 130px;">Risk Score</th>
+                        <th style="width: 180px;">Timestamp</th>
+                        <th style="width: 110px; text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scan in recent_scans %}
+                    <tr>
+                        <td class="font-mono text-muted">#{{ scan.id }}</td>
+                        <td class="font-medium text-main">
+                            <div class="subject-cell-truncate" title="{{ scan.subject }}">
+                                {{ scan.subject or "Untitled Email Content" }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if scan.classification == 'Spam' %}
+                                <span class="badge-status status-spam">
+                                    <span class="status-indicator-dot dot-rose"></span> Spam
+                                </span>
+                            {% elif scan.classification == 'Suspicious' %}
+                                <span class="badge-status status-suspicious">
+                                    <span class="status-indicator-dot dot-amber"></span> Suspicious
+                                </span>
+                            {% else %}
+                                <span class="badge-status status-legitimate">
+                                    <span class="status-indicator-dot dot-green"></span> Legitimate
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="score-display-cell">
+                                <span class="score-num font-mono {% if scan.heuristic_risk_score >= 60 %}text-rose{% elif scan.heuristic_risk_score >= 30 %}text-amber{% else %}text-emerald{% endif %}">
+                                    {{ scan.heuristic_risk_score|round(1) }}
+                                </span>
+                                <span class="score-max">/100</span>
+                            </div>
+                        </td>
+                        <td class="text-muted font-mono text-sm">
+                            {{ scan.timestamp[:19] }}
+                        </td>
+                        <td style="text-align: right;">
+                            <a href="{{ url_for('history') }}" class="btn-table-action">
+                                Inspect
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state-panel table-empty">
+            <p>No email scans stored in SQLite yet. Use the <strong>Email Scanner</strong> to begin analyzing incoming messages.</p>
+            <a href="{{ url_for('scanner') }}" class="btn-primary btn-sm">Scan First Email</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

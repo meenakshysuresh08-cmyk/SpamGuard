@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header-block">
+    <div class="page-header-text">
+        <h1 class="page-main-title">Theoretical Foundations: Automata & Formal Languages</h1>
+        <p class="page-subtitle">A comprehensive academic overview of how Regular Expressions and Finite State Machines guarantee deterministic $O(n)$ spam classification without machine learning.</p>
+    </div>
+    <div class="page-header-actions">
+        <span class="badge-code">Chomsky Hierarchy: Type-3</span>
+    </div>
+</div>
+
+<div class="toc-theory-grid">
+    <!-- Section 1: Introduction -->
+    <div class="ui-panel">
+        <div class="panel-header">
+            <div>
+                <h3 class="panel-title">1. Introduction to Formal Language Theory</h3>
+                <p class="panel-desc">Foundations of abstract machines and formal computational models</p>
+            </div>
+            <span class="badge-code">Mathematical Foundation</span>
+        </div>
+        <div class="panel-body theory-prose">
+            <p>
+                In the <strong>Theory of Computation (TOC)</strong>, computation is analyzed through formal mathematical models rather than specific hardware or empirical heuristics. A fundamental question is: <em>what can an abstract automaton recognize when memory is strictly bounded?</em>
+            </p>
+            <p>
+                Email spam detection is traditionally approached using heavy, opaque Machine Learning (ML) models like Naive Bayes, Support Vector Machines, or Large Language Models (LLMs). While flexible, ML models suffer from <strong>non-determinism</strong>, high computational latency, adversarial evasion (such as prompt injections or invisible characters), and zero formal behavioral guarantees.
+            </p>
+            <p>
+                <strong>SpamGuard</strong> demonstrates that core TOC primitives—<strong>Regular Expressions (RE)</strong> and <strong>Deterministic Finite Automata (DFA)</strong>—can classify email sequences deterministically in linear time $O(n)$ with constant space $O(1)$.
+            </p>
+        </div>
+    </div>
+
+    <!-- Section 2: Chomsky Hierarchy -->
+    <div class="ui-panel">
+        <div class="panel-header">
+            <div>
+                <h3 class="panel-title">2. The Chomsky Language Hierarchy</h3>
+                <p class="panel-desc">Where SpamGuard's recognition engine lives in formal grammar classification</p>
+            </div>
+            <span class="badge-code">Classification Hierarchy</span>
+        </div>
+        <div class="panel-body">
+            <div class="chomsky-visual-container">
+                <div class="chomsky-layer layer-3 active-layer">
+                    <div class="layer-header">
+                        <span class="layer-title">Type-3: Regular Languages (SpamGuard Engine)</span>
+                        <span class="layer-machine">Recognized by: Finite State Automata (DFA / NFA)</span>
+                    </div>
+                    <p class="layer-desc">Memory: No auxiliary memory. State tracks finite history. Power: Regular Expressions.</p>
+                </div>
+
+                <div class="chomsky-layer layer-2">
+                    <div class="layer-header">
+                        <span class="layer-title">Type-2: Context-Free Languages</span>
+                        <span class="layer-machine">Recognized by: Pushdown Automata (PDA)</span>
+                    </div>
+                    <p class="layer-desc">Memory: Single LIFO stack. Capable of parsing nested structures (e.g. HTML/JSON brackets).</p>
+                </div>
+
+                <div class="chomsky-layer layer-1">
+                    <div class="layer-header">
+                        <span class="layer-title">Type-1: Context-Sensitive Languages</span>
+                        <span class="layer-machine">Recognized by: Linear-Bounded Automata (LBA)</span>
+                    </div>
+                    <p class="layer-desc">Memory: Tape bounded by input length. Context determines replacement rules.</p>
+                </div>
+
+                <div class="chomsky-layer layer-0">
+                    <div class="layer-header">
+                        <span class="layer-title">Type-0: Recursively Enumerable</span>
+                        <span class="layer-machine">Recognized by: Turing Machines (TM)</span>
+                    </div>
+                    <p class="layer-desc">Memory: Infinite read/write tape. Equivalent to general-purpose computing.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: Kleene's Theorem -->
+    <div class="ui-panel">
+        <div class="panel-header">
+            <div>
+                <h3 class="panel-title">3. Kleene's Equivalence Theorem</h3>
+                <p class="panel-desc">Mathematical equivalence of Regular Expressions and Finite Automata</p>
+            </div>
+            <span class="badge-code font-mono">RE ≡ DFA ≡ NFA</span>
+        </div>
+        <div class="panel-body theory-prose">
+            <p>
+                A cornerstone theorem of Automata Theory proven by Stephen Cole Kleene states:
+            </p>
+            <div class="theorem-card">
+                <div class="theorem-badge">Kleene's Theorem</div>
+                <div class="theorem-statement">
+                    "A language L over an alphabet Σ is recognized by a Deterministic Finite Automaton (DFA) if and only if L can be described by a Regular Expression (RE)."
+                </div>
+            </div>
+            <p>
+                In SpamGuard, this equivalence is used in two complementary stages:
+            </p>
+            <ol class="theory-ordered-list">
+                <li>
+                    <strong>Micro-Recognition (Regular Expressions):</strong> Scans the raw character stream $\Sigma_{\text{text}}^*$ to detect individual phishing heuristics (domain syntax, lure wording, credential keywords).
+                </li>
+                <li>
+                    <strong>Macro-Validation (Deterministic Finite Automaton):</strong> Evaluates whether the sequence of detected tokens forms an accepted social-engineering attack trajectory in the token language $\Sigma_{\text{token}}^*$.
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Section 4: Formal DFA 5-Tuple -->
+    <div class="ui-panel">
+        <div class="panel-header">
+            <div>
+                <h3 class="panel-title">4. Formal Mathematical Specification of SpamGuard's DFA</h3>
+                <p class="panel-desc">Exact formal 5-tuple M = (Q, Σ, δ, q₀, F)</p>
+            </div>
+            <span class="badge-code font-mono">Formal Automaton</span>
+        </div>
+        <div class="panel-body">
+            <div class="five-tuple-grid">
+                <div class="tuple-item">
+                    <div class="tuple-sym">Q</div>
+                    <div class="tuple-details">
+                        <strong>Finite Set of States:</strong>
+                        <code>{ q0, q1, q2, q3, q4, q_dead }</code>
+                        <p>Where q0 = Initial state, q1 = Lure Detected, q2 = Pressure Applied, q3 = Suspicious Link Reached, q4 = Credential Theft Attempted, q_dead = Sink state.</p>
+                    </div>
+                </div>
+
+                <div class="tuple-item">
+                    <div class="tuple-sym">Σ</div>
+                    <div class="tuple-details">
+                        <strong>Input Alphabet:</strong>
+                        <code>{ LURE, URGENT, URL, CREDENTIAL, OTHER }</code>
+                        <p>Discrete token symbols extracted from incoming email content.</p>
+                    </div>
+                </div>
+
+                <div class="tuple-item">
+                    <div class="tuple-sym">q₀</div>
+                    <div class="tuple-details">
+                        <strong>Start / Initial State:</strong>
+                        <code>q0 ∈ Q</code>
+                        <p>The automaton always starts in state q0 before reading the first token.</p>
+                    </div>
+                </div>
+
+                <div class="tuple-item">
+                    <div class="tuple-sym">F</div>
+                    <div class="tuple-details">
+                        <strong>Set of Accepting / Final States:</strong>
+                        <code class="text-success">{ q3, q4 } ⊆ Q</code>
+                        <p>If the input sequence drives the automaton to either q3 (malicious link) or q4 (credential request), the sequence is mathematically accepted as spam pattern.</p>
+                    </div>
+                </div>
+
+                <div class="tuple-item">
+                    <div class="tuple-sym">δ</div>
+                    <div class="tuple-details">
+                        <strong>Transition Function:</strong>
+                        <code>δ: Q × Σ → Q</code>
+                        <p>A total function mapping every (state, symbol) pair to exactly one next state, guaranteeing determinism.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 5: TOC vs Machine Learning Comparison -->
+    <div class="ui-panel">
+        <div class="panel-header">
+            <div>
+                <h3 class="panel-title">5. Comparative Analysis: Automata vs. Machine Learning</h3>
+                <p class="panel-desc">Why theoretical computer science models excel in explainability and reliability</p>
+            </div>
+            <span class="badge-code">System Comparison</span>
+        </div>
+        <div class="panel-body no-pad">
+            <div class="responsive-table-wrapper">
+                <table class="modern-table comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Evaluation Criterion</th>
+                            <th class="col-highlight">SpamGuard (DFA + Regex)</th>
+                            <th>Traditional Machine Learning (ML)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-medium">Computational Complexity</td>
+                            <td class="text-emerald font-semibold">Strict O(n) Time, O(1) Memory</td>
+                            <td>O(n · d) or matrix operations requiring GPU/TPU</td>
+                        </tr>
+                        <tr>
+                            <td class="font-medium">Explainability & Auditability</td>
+                            <td class="text-emerald font-semibold">100% Deterministic State Trace</td>
+                            <td>Black-box probability distribution / hidden layers</td>
+                        </tr>
+                        <tr>
+                            <td class="font-medium">External Model Dependencies</td>
+                            <td class="text-emerald font-semibold">Zero (Pure Python & SQLite)</td>
+                            <td>PyTorch, TensorFlow, or remote API latency</td>
+                        </tr>
+                        <tr>
+                            <td class="font-medium">Data Drift & Retraining</td>
+                            <td class="text-emerald font-semibold">None (Mathematically Defined Rules)</td>
+                            <td>Requires continuous dataset collection & retraining</td>
+                        </tr>
+                        <tr>
+                            <td class="font-medium">Adversarial Resistance</td>
+                            <td class="text-emerald font-semibold">Exact token grammar transitions</td>
+                            <td>Vulnerable to prompt injections & adversarial gradients</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

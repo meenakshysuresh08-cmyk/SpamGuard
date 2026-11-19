@@ -1,0 +1,19 @@
+Subject: Urgent: Your Account Has Been Compromised!
+
+Dear Customer,
+
+URGENT: Your account has been suspended due to suspicious activity!
+We detected unauthorized access from a new device.
+
+IMMEDIATELY verify your identity by clicking:
+https://account-verify-secure.xyz/login
+
+Your account will be permanently deleted in 24 hours if we don't receive verification.
+
+Your OTP is: 123456
+
+Do NOT share this code with anyone.
+
+Sincerely,
+Security Team
+SecureBank

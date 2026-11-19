@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header-block">
+    <div class="page-header-text">
+        <h1 class="page-main-title">Analysis Audit History</h1>
+        <p class="page-subtitle">Historical repository of all email evaluations stored deterministically in SQLite.</p>
+    </div>
+    <div class="page-header-actions">
+        {% if scans %}
+        <button type="button" id="clear-history-btn" class="btn-danger-outline">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            Clear All History
+        </button>
+        {% endif %}
+        <a href="{{ url_for('scanner') }}" class="btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            New Scan
+        </a>
+    </div>
+</div>
+
+<div class="ui-panel table-panel">
+    <!-- Controls Bar -->
+    <div class="history-controls-bar">
+        <div class="history-filters">
+            <button type="button" class="filter-tab active" data-filter="all">All (<span id="total-count">{{ scans|length }}</span>)</button>
+            <button type="button" class="filter-tab" data-filter="Spam">Spam Only</button>
+            <button type="button" class="filter-tab" data-filter="Suspicious">Suspicious</button>
+            <button type="button" class="filter-tab" data-filter="Legitimate">Legitimate</button>
+        </div>
+
+        <div class="history-search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="history-search" class="search-input" placeholder="Search by subject or ID...">
+        </div>
+    </div>
+
+    <!-- Table Body -->
+    <div class="panel-body no-pad">
+        <div class="responsive-table-wrapper">
+            <table class="modern-table" id="scan-table">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">ID</th>
+                        <th>Subject Header</th>
+                        <th style="width: 140px;">Verdict</th>
+                        <th style="width: 120px;">Risk Score</th>
+                        <th style="width: 180px;">Logged Timestamp</th>
+                        <th style="width: 140px; text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scan in scans %}
+                    <tr class="scan-row" data-classification="{{ scan.classification }}">
+                        <td class="font-mono text-muted">#{{ scan.id }}</td>
+                        <td class="font-medium text-main">
+                            <div class="subject-cell-truncate" title="{{ scan.subject }}">
+                                {{ scan.subject or "Untitled Email Content" }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if scan.classification == 'Spam' %}
+                                <span class="badge-status status-spam">
+                                    <span class="status-indicator-dot dot-rose"></span> Spam
+                                </span>
+                            {% elif scan.classification == 'Suspicious' %}
+                                <span class="badge-status status-suspicious">
+                                    <span class="status-indicator-dot dot-amber"></span> Suspicious
+                                </span>
+                            {% else %}
+                                <span class="badge-status status-legitimate">
+                                    <span class="status-indicator-dot dot-green"></span> Legitimate
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="score-display-cell">
+                                <span class="score-num font-mono {% if scan.heuristic_risk_score >= 60 %}text-rose{% elif scan.heuristic_risk_score >= 30 %}text-amber{% else %}text-emerald{% endif %}">
+                                    {{ scan.heuristic_risk_score|round(1) }}
+                                </span>
+                                <span class="score-max">/100</span>
+                            </div>
+                        </td>
+                        <td class="text-muted font-mono text-sm">
+                            {{ scan.timestamp[:19] }}
+                        </td>
+                        <td style="text-align: right;">
+                            <button type="button" class="btn-table-action view-btn" data-scan-id="{{ scan.id }}">
+                                Inspect
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if not scans %}
+        <div class="empty-state-panel">
+            <div class="empty-icon-wrap">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+            <h4>No Records in Scan History</h4>
+            <p>Emails evaluated through the scanner will automatically be logged here with complete DFA traces.</p>
+            <a href="{{ url_for('scanner') }}" class="btn-primary btn-sm">Scan an Email</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal: View Scan Record -->
+<div id="view-modal" class="modal-backdrop hidden">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <div>
+                <h3 class="modal-title">Evaluation Detail Record</h3>
+                <p class="modal-subtitle">Full forensic breakdown of DFA states & matched regex</p>
+            </div>
+            <button type="button" class="modal-close-btn close-btn">&times;</button>
+        </div>
+        <div class="modal-body" id="modal-body">
+            <!-- Populated dynamically via JS -->
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-outline close-btn">Dismiss</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

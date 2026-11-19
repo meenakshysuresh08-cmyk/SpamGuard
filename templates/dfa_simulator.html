@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header-block">
+    <div class="page-header-text">
+        <h1 class="page-main-title">Deterministic Finite Automaton Simulator</h1>
+        <p class="page-subtitle">Interactive state-transition execution model for the 5-tuple M = (Q, Σ, δ, q₀, F) validating malicious sequence progressions.</p>
+    </div>
+    <div class="page-header-actions">
+        <span class="badge-code font-mono">F = { q3, q4 }</span>
+        <span class="badge-code font-mono">q0 = Start</span>
+    </div>
+</div>
+
+<!-- Automaton State Diagram & Formal Specs -->
+<div class="dfa-layout-grid">
+    <!-- Top: Interactive SVG State Graph -->
+    <div class="ui-panel diagram-panel">
+        <div class="panel-header">
+            <div>
+                <h3 class="panel-title">Automata State Transition Graph</h3>
+                <p class="panel-desc">Visual topology of states and directed transition edges</p>
+            </div>
+            <div class="diagram-legend">
+                <span class="legend-chip"><span class="chip-circle circle-start"></span> Start (q0)</span>
+                <span class="legend-chip"><span class="chip-circle circle-intermediate"></span> Intermediate</span>
+                <span class="legend-chip"><span class="chip-circle circle-accept"></span> Accepting (q3, q4)</span>
+                <span class="legend-chip"><span class="chip-circle circle-dead"></span> Dead (q_dead)</span>
+            </div>
+        </div>
+
+        <div class="panel-body diagram-panel-body">
+            <div class="svg-diagram-wrapper">
+                <svg id="state-diagram" viewBox="0 0 850 260" class="dfa-diagram-svg">
+                    <!-- High-polish SVG State Diagram rendered via JavaScript / SVG elements -->
+                </svg>
+            </div>
+            <div class="state-indicator-bar" id="active-state-indicator">
+                <span class="indicator-label">Active State:</span>
+                <span class="indicator-badge" id="current-state-badge">q0 (Start State)</span>
+                <span class="indicator-desc" id="current-state-desc">Waiting for initial token from incoming email...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simulator Input & Execution Controls -->
+    <div class="ui-panel">
+        <div class="panel-header">
+            <div>
+                <h3 class="panel-title">Simulation Execution Controller</h3>
+                <p class="panel-desc">Feed formal input alphabet Σ into the transition function</p>
+            </div>
+            <span class="badge-status-waiting" id="sim-status-badge">Ready</span>
+        </div>
+
+        <div class="panel-body">
+            <!-- Preset Buttons -->
+            <div class="presets-block">
+                <span class="form-label">Quick Test Sequences:</span>
+                <div class="preset-pills-row">
+                    <button type="button" class="preset-pill example-btn" data-seq="LURE,URGENT,URL,CREDENTIAL">
+                        <span class="pill-dot dot-rose"></span> Full Phishing (Accepts at q4)
+                    </button>
+                    <button type="button" class="preset-pill example-btn" data-seq="LURE,URGENT,URL">
+                        <span class="pill-dot dot-rose"></span> Suspicious Link (Accepts at q3)
+                    </button>
+                    <button type="button" class="preset-pill example-btn" data-seq="URGENT,LURE,URL,CREDENTIAL">
+                        <span class="pill-dot dot-rose"></span> Alternate Order (Accepts at q4)
+                    </button>
+                    <button type="button" class="preset-pill example-btn" data-seq="OTHER,OTHER,URL">
+                        <span class="pill-dot dot-gray"></span> Benign Flow (Rejects to q_dead)
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="form-label-row">
+                    <label for="token-sequence" class="form-label">Input Token Sequence (comma separated)</label>
+                    <span class="tokens-help-btn" title="Allowed tokens: LURE, URGENT, URL, CREDENTIAL, OTHER">Alphabet: { LURE, URGENT, URL, CREDENTIAL, OTHER }</span>
+                </div>
+                <div class="token-input-row">
+                    <input type="text" id="token-sequence" class="form-control font-mono" placeholder="e.g. LURE, URGENT, URL, CREDENTIAL" value="LURE, URGENT, URL, CREDENTIAL">
+                    <div class="token-quick-add">
+                        <button type="button" class="btn-token-add" data-token="LURE">+ LURE</button>
+                        <button type="button" class="btn-token-add" data-token="URGENT">+ URGENT</button>
+                        <button type="button" class="btn-token-add" data-token="URL">+ URL</button>
+                        <button type="button" class="btn-token-add" data-token="CREDENTIAL">+ CREDENTIAL</button>
+                        <button type="button" class="btn-token-add" data-token="OTHER">+ OTHER</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sim-actions-bar">
+                <button type="button" id="run-btn" class="btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Run Complete DFA
+                </button>
+                <button type="button" id="step-btn" class="btn-outline">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+                    Step Forward
+                </button>
+                <button type="button" id="clear-btn" class="btn-outline">
+                    Reset
+                </button>
+            </div>
+
+            <!-- Simulation Results Output -->
+            <div id="run-results" class="sim-results-box hidden">
+                <div class="verdict-banner sim-verdict" id="sim-verdict-banner">
+                    <div class="verdict-left">
+                        <span class="verdict-sub">DFA Language Acceptance Verdict</span>
+                        <h3 class="verdict-title" id="acceptance-status">-</h3>
+                    </div>
+                    <div class="verdict-right">
+                        <div class="state-result-pill" id="final-state-display">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="trace-section">
+                    <h5 class="section-box-title">Step-by-Step State Transition Trace:</h5>
+                    <div class="responsive-table-wrapper">
+                        <table class="modern-table trace-table" id="trace-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">Step</th>
+                                    <th style="width: 110px;">Current State</th>
+                                    <th style="width: 140px;">Input Token (σ)</th>
+                                    <th style="width: 110px;">Next State δ(q,σ)</th>
+                                    <th>State Semantic Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom: Formal Transition Matrix -->
+    <div class="ui-panel">
+        <div class="panel-header">
+            <div>
+                <h3 class="panel-title">Automata Transition Function Matrix: δ(Q × Σ → Q)</h3>
+                <p class="panel-desc">Exhaustive mathematical table defining exact state transitions</p>
+            </div>
+            <span class="badge-code font-mono">6 States × 5 Symbols</span>
+        </div>
+        <div class="panel-body no-pad">
+            <div class="responsive-table-wrapper">
+                <table class="modern-table transition-matrix-table" id="transition-table">
+                    <!-- Populated dynamically via /api/dfa/config -->
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

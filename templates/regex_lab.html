@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header-block">
+    <div class="page-header-text">
+        <h1 class="page-main-title">Regular Expression Laboratory</h1>
+        <p class="page-subtitle">Test and inspect the formal regular languages used to extract tokens for spam sequence classification.</p>
+    </div>
+    <div class="page-header-actions">
+        <span class="badge-code">Chomsky Type-3 Recognizer</span>
+    </div>
+</div>
+
+<div class="lab-layout-grid">
+    <!-- Left: Interactive Tester -->
+    <div class="ui-panel">
+        <div class="panel-header">
+            <div>
+                <h3 class="panel-title">Pattern Sandbox</h3>
+                <p class="panel-desc">Select an expression and test sample strings</p>
+            </div>
+            <div class="pattern-weight-tag" id="pattern-weight-badge">Weight: 20 pts</div>
+        </div>
+
+        <div class="panel-body">
+            <div class="form-group">
+                <label for="pattern-select" class="form-label">Active TOC Regex Pattern</label>
+                <div class="select-wrapper">
+                    <select id="pattern-select" class="form-control select-modern">
+                        <option value="suspicious_url">Suspicious URLs & Phishing Domains</option>
+                        <option value="free_offer">Free Offers & Gift Promises</option>
+                        <option value="prize_winner">Lottery, Jackpots & Winner Claims</option>
+                        <option value="urgent_wording">Urgent Pressure & Panic Language</option>
+                        <option value="discount_offer">Promotional Discounts & Deals</option>
+                        <option value="credential_request">Credential Harvest & Account Threats</option>
+                        <option value="money_transfer">Untraceable Money Transfers</option>
+                        <option value="guarantee_words">Over-Promising Guarantee Claims</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="regex-display-card">
+                <div class="regex-card-top">
+                    <span class="regex-label">Compiled Regular Expression:</span>
+                    <button type="button" class="btn-copy-code" id="btn-copy-regex" title="Copy Regex">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                        Copy
+                    </button>
+                </div>
+                <div class="regex-code-block font-mono" id="pattern-regex">
+                    <!-- Populated via API / fallback -->
+                </div>
+                <p class="regex-desc-text" id="pattern-description"></p>
+            </div>
+
+            <div class="form-group">
+                <div class="form-label-row">
+                    <label for="sample-text" class="form-label">Input Test String</label>
+                    <button type="button" class="btn-text-action" id="btn-load-regex-example">Load Example Text</button>
+                </div>
+                <textarea id="sample-text" class="form-control font-mono" rows="6" placeholder="Enter sample email sentences to test against the active pattern..."></textarea>
+            </div>
+
+            <div class="form-actions-row">
+                <button type="button" id="test-btn" class="btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Evaluate Pattern
+                </button>
+                <button type="button" class="btn-outline" onclick="document.getElementById('sample-text').value = ''; document.getElementById('test-result').classList.add('hidden');">
+                    Clear Text
+                </button>
+            </div>
+
+            <!-- Test Result Section -->
+            <div id="test-result" class="test-result-box hidden">
+                <div class="test-result-header">
+                    <div id="test-status" class="test-status-pill"></div>
+                    <span class="match-count-badge"><strong id="match-count">0</strong> match(es) extracted</span>
+                </div>
+                
+                <div class="matches-list-section">
+                    <span class="matches-list-title">Extracted Substrings:</span>
+                    <ul id="matches-ul" class="matches-chips-list"></ul>
+                </div>
+
+                <div class="highlighted-preview-box">
+                    <span class="matches-list-title">Matched Context:</span>
+                    <div id="highlighted-output" class="highlighted-render"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Theoretical Catalog of 8 Rules -->
+    <div class="ui-panel">
+        <div class="panel-header">
+            <div>
+                <h3 class="panel-title">TOC Heuristic Signatures Catalog</h3>
+                <p class="panel-desc">8 formal regular languages recognizing spam tokens</p>
+            </div>
+            <span class="badge-code">8 Active Grammars</span>
+        </div>
+
+        <div class="panel-body">
+            <div class="patterns-catalog-grid">
+                <!-- 1 -->
+                <div class="catalog-card" data-pattern="credential_request">
+                    <div class="catalog-card-header">
+                        <span class="catalog-card-title">Credential Harvest</span>
+                        <span class="catalog-weight-tag weight-high">Weight: 30</span>
+                    </div>
+                    <p class="catalog-desc">Flags requests for sensitive personal information (password, OTP, SSN, card).</p>
+                    <code class="catalog-code">\b(password|pin|otp|card\s+number|ssn)\b</code>
+                </div>
+
+                <!-- 2 -->
+                <div class="catalog-card" data-pattern="prize_winner">
+                    <div class="catalog-card-header">
+                        <span class="catalog-card-title">Prize & Winner Claims</span>
+                        <span class="catalog-weight-tag weight-high">Weight: 25</span>
+                    </div>
+                    <p class="catalog-desc">Matches lottery wins, claims of huge sums of money, or sweepstake prizes.</p>
+                    <code class="catalog-code">\b(winner|prize|jackpot|million|billion)\b</code>
+                </div>
+
+                <!-- 3 -->
+                <div class="catalog-card" data-pattern="free_offer">
+                    <div class="catalog-card-header">
+                        <span class="catalog-card-title">Free Offers & Lures</span>
+                        <span class="catalog-weight-tag weight-med">Weight: 20</span>
+                    </div>
+                    <p class="catalog-desc">Detects promotional bait promising free trials, free items, or gifts.</p>
+                    <code class="catalog-code">\b(free|free\s+gift|free\s+trial)\b</code>
+                </div>
+
+                <!-- 4 -->
+                <div class="catalog-card" data-pattern="urgent_wording">
+                    <div class="catalog-card-header">
+                        <span class="catalog-card-title">Urgent Pressure Tactics</span>
+                        <span class="catalog-weight-tag weight-med">Weight: 20</span>
+                    </div>
+                    <p class="catalog-desc">Detects artificial urgency engineered to cause hasty victim response.</p>
+                    <code class="catalog-code">\b(urgent|immediately|asap|act\s+now)\b</code>
+                </div>
+
+                <!-- 5 -->
+                <div class="catalog-card" data-pattern="money_transfer">
+                    <div class="catalog-card-header">
+                        <span class="catalog-card-title">Money Transfer Services</span>
+                        <span class="catalog-weight-tag weight-med">Weight: 20</span>
+                    </div>
+                    <p class="catalog-desc">References to wire transfers, Western Union, MoneyGram, and escrow.</p>
+                    <code class="catalog-code">\b(wire\s+transfer|western\s+union)\b</code>
+                </div>
+
+                <!-- 6 -->
+                <div class="catalog-card" data-pattern="suspicious_url">
+                    <div class="catalog-card-header">
+                        <span class="catalog-card-title">Suspicious Domains & TLDs</span>
+                        <span class="catalog-weight-tag weight-low">Weight: 15</span>
+                    </div>
+                    <p class="catalog-desc">Scans for high-risk TLDs like .xyz, .top, .click, .link, .ru, .cc.</p>
+                    <code class="catalog-code">(?i)(?:https?://)?(?:[\w-]+\.)+(?:xyz|top|...)</code>
+                </div>
+
+                <!-- 7 -->
+                <div class="catalog-card" data-pattern="discount_offer">
+                    <div class="catalog-card-header">
+                        <span class="catalog-card-title">Discount Bait</span>
+                        <span class="catalog-weight-tag weight-low">Weight: 15</span>
+                    </div>
+                    <p class="catalog-desc">Matches promotional percentages like 90% off, clearance discounts, sales.</p>
+                    <code class="catalog-code">\b\d+%?\s*(off|discount|sale|deal)\b</code>
+                </div>
+
+                <!-- 8 -->
+                <div class="catalog-card" data-pattern="guarantee_words">
+                    <div class="catalog-card-header">
+                        <span class="catalog-card-title">Guaranteed Promises</span>
+                        <span class="catalog-weight-tag weight-low">Weight: 15</span>
+                    </div>
+                    <p class="catalog-desc">Detects over-promising guarantees like 100% money back, zero risk.</p>
+                    <code class="catalog-code">\b(guaranteed|100%|no\s*risk)\b</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
